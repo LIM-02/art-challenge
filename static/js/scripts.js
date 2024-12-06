@@ -54,12 +54,12 @@ function loadProducts(offset = 0) {
 
             data.forEach(product => {
                 let actions = `
-                    <button onclick="viewProduct(${product.product_id})">View</button>
+                    <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" onclick="viewProduct(${product.product_id})">View</button>
                 `;
                 if (userRole === 'manager') {
                     actions += `
-                        <button onclick="editProduct(${product.product_id})">Edit</button>
-                        <button onclick="deleteProduct(${product.product_id})">Delete</button>
+                        <button class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600" onclick="editProduct(${product.product_id})">Edit</button>
+                        <button class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600" onclick="deleteProduct(${product.product_id})">Delete</button>
                     `;
                 }
                 const row = `
