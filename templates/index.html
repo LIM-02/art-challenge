@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <header class="bg-blue-600 text-white py-4">
+        <h1 class="text-center text-3xl font-bold">Warehouse Management</h1>
+    </header>
+
+    <main class="container mx-auto mt-8 p-4 bg-white shadow-md rounded-md">
+        <!-- Navigation Buttons -->
+        <nav class="mb-6 flex justify-center space-x-4">
+            <button id="inventory-button" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                Inventory
+            </button>
+            <button id="inbound-button" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+                Inbound
+            </button>
+            <button id="outbound-button" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+                Outbound
+            </button>
+        </nav>
+
+        <!-- Inventory Management -->
+        <div id="inventory-section">
+            <h2 class="text-xl font-bold mb-4">Inventory Management</h2>
+            <!-- Navigation Buttons -->
+            <div id="pagination-controls" class="flex justify-end space-x-4 mt-4">
+                <button id="prev-button" class="px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400" disabled>
+                    Previous
+                </button>
+                <button id="next-button" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    Next
+                </button>
+            </div>
+
+            <table id="productTable" class="table-auto w-full border-collapse border border-gray-200 shadow-md">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2">ID</th>
+                        <th class="border border-gray-300 px-4 py-2">Name</th>
+                        <th class="border border-gray-300 px-4 py-2">Tags</th>
+                        <th class="border border-gray-300 px-4 py-2">Description</th>
+                        <th class="border border-gray-300 px-4 py-2">Quantity</th>
+                        <th class="border border-gray-300 px-4 py-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-center"></tbody>
+            </table>
+
+            <!-- Add New Product -->
+            <div id="add-product-section" class="mt-6 p-4 bg-gray-100 border border-gray-200 rounded-md" style="display:none;">
+                <h3 class="text-lg font-bold mb-4">Add New Product</h3>
+                <form id="addProductForm" class="grid gap-4">
+                    <input type="text" name="product_name" placeholder="Product Name" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                    <input type="text" name="tags" placeholder="Tags" class="px-4 py-2 border border-gray-300 rounded-md" />
+                    <input type="number" name="quantity" placeholder="Quantity" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                    <textarea name="description" placeholder="Description" class="px-4 py-2 border border-gray-300 rounded-md"></textarea>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                        Add Product
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Inbound Section -->
+        <div id="inbound-section" style="display: none;">
+            <h2 class="text-xl font-bold mb-4">Inbound Records</h2>
+            <div id="pagination-controls-inbound" class="flex justify-end space-x-4 mt-4 hidden">
+                <button id="prev-inbound-button" class="px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400" disabled>
+                    Previous
+                </button>
+                <button id="next-inbound-button" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    Next
+                </button>
+            </div>
+            <table id="inboundTable" class="table-auto w-full border-collapse border border-gray-200 shadow-md">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2">ID</th>
+                        <th class="border border-gray-300 px-4 py-2">Product ID</th>
+                        <th class="border border-gray-300 px-4 py-2">Supplier ID</th>
+                        <th class="border border-gray-300 px-4 py-2">Quantity Received</th>
+                        <th class="border border-gray-300 px-4 py-2">Received Date</th>
+                    </tr>
+                </thead>
+                <tbody class="text-center"></tbody>
+            </table>
+            <form id="inboundForm" class="grid gap-4 mb-6 p-4 bg-gray-100 border border-gray-200 rounded-md">
+                <input type="number" name="product_id" placeholder="Product ID" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="text" name="supplier_id" placeholder="Supplier ID" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="number" name="quantity_received" placeholder="Quantity Received" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="datetime-local" name="received_date" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="text" name="product_name" placeholder="Product Name (only for new products)" class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="text" name="tags" placeholder="Tags (only for new products)" class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="text" name="description" placeholder="Description (only for new products)" class="px-4 py-2 border border-gray-300 rounded-md" />
+                <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+                    Log Inbound
+                </button>
+            </form>
+        </div>
+
+        <!-- Outbound Section -->
+        <div id="outbound-section" style="display:none;">
+            <h2 class="text-xl font-bold mb-4">Outbound Management</h2>
+            <div id="pagination-controls-outbound" class="flex justify-end space-x-4 mt-4 hidden">
+                <button id="prev-outbound-button" class="px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400" disabled>
+                    Previous
+                </button>
+                <button id="next-outbound-button" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    Next
+                </button>
+            </div>
+            <table id="outboundTable" class="table-auto w-full border-collapse border border-gray-200 shadow-md">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2">ID</th>
+                        <th class="border border-gray-300 px-4 py-2">Product ID</th>
+                        <th class="border border-gray-300 px-4 py-2">Customer ID</th>
+                        <th class="border border-gray-300 px-4 py-2">Quantity Sent</th>
+                        <th class="border border-gray-300 px-4 py-2">Sent Date</th>
+                    </tr>
+                </thead>
+                <tbody class="text-center"></tbody>
+            </table>
+            <form id="outbound-form" class="grid gap-4 mb-6 p-4 bg-gray-100 border border-gray-200 rounded-md">
+                <input type="number" name="product_id" placeholder="Product ID" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="number" name="customer_id" placeholder="Customer ID" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="number" name="quantity_sent" placeholder="Quantity Sent" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="datetime-local" name="sent_date" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+                    Log Outbound
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Link to external JS -->
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>
