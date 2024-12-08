@@ -147,6 +147,22 @@ def delete_product(product_id):
         cursor.close()
         conn.close()
 
+# edit a product (Manager only)
+@app.route('/products/<int:product_id>', methods=['GET', 'PUT'])
+@manager_required
+def edit_product(product_id):
+    if request.method == 'GET':
+        cursor = get_db_connection().cursor(dictionary=True)
+        cursor.execute('SELECT * FROM Product WHERE product_id = %s', (product_id,))
+        product = cursor.fetchone()
+        if product:
+            return jsonify(product), 200
+        return jsonify({"error": "Product not found"}), 404
+    elif request.method == 'PUT':
+        # Handle the update logic here
+        pass
+
+
 
 @app.route('/inbound', methods=['GET'])
 @login_required

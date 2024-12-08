@@ -210,6 +210,28 @@ function deleteProduct(product_id) {
         });
 }
 
+function editProduct(product_id) {
+    fetch(`/products/${product_id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch product details');
+            }
+            return response.json();
+        })
+        .then(product => {
+            document.getElementById('edit-product-id').value = product.product_id;
+            document.getElementById('edit-product-name').value = product.product_name;
+            document.getElementById('edit-product-tags').value = product.tags;
+            document.getElementById('edit-product-description').value = product.description;
+            document.getElementById('edit-product-quantity').value = product.quantity;
+
+            // Show the edit form
+            document.getElementById('edit-form').style.display = 'block';
+        })
+        .catch(error => console.error('Error:', error.message));
+}
+
+
 // Initial Load
 loadProducts();
 if (userRole === 'manager') {
