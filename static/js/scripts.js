@@ -211,25 +211,49 @@ function deleteProduct(product_id) {
 }
 
 function editProduct(product_id) {
+    // Fetch product details from API
     fetch(`/products/${product_id}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch product details');
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(product => {
+            // Populate form fields
             document.getElementById('edit-product-id').value = product.product_id;
             document.getElementById('edit-product-name').value = product.product_name;
             document.getElementById('edit-product-tags').value = product.tags;
-            document.getElementById('edit-product-description').value = product.description;
             document.getElementById('edit-product-quantity').value = product.quantity;
+            document.getElementById('edit-product-description').value = product.description;
 
-            // Show the edit form
+            // Show the form
             document.getElementById('edit-form').style.display = 'block';
         })
-        .catch(error => console.error('Error:', error.message));
+        .catch(error => console.error('Error fetching product details:', error));
 }
+
+// Submit form
+document.getElementById('edit-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const updatedProduct = {
+        product_id: document.getElementById('edit-product-id').value,
+        product_name: document.getElementById('edit-product-name').value,
+        tags: document.getElementById('edit-product-tags').value,
+        quantity: document.getElementById('edit-product-quantity').value,
+        description: document.getElementById('edit-product-description').value,
+    };
+
+    fetch(`/products/${updatedProduct.product_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedProduct),
+    })
+        .then(response => response.json())
+        .then(result => {
+            alert(result.message || 'Product updated successfully!');
+            loadProducts(); // Reload the product list
+            document.getElementById('edit-form').style.display = 'none'; // Hide the form
+        })
+        .catch(error => console.error('Error updating product:', error));
+});
+
 
 
 // Initial Load
