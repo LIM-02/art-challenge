@@ -75,6 +75,28 @@
                     </button>
                 </form>
             </div>
+            <!-- Edit Form -->
+            <form id="edit-form" style="display: none; margin-top: 20px;">
+                <h3>Edit Product</h3>
+                <input type="hidden" id="edit-product-id" />
+                <div>
+                    <label for="edit-product-name">Name:</label>
+                    <input type="text" id="edit-product-name" />
+                </div>
+                <div>
+                    <label for="edit-product-tags">Tags:</label>
+                    <input type="text" id="edit-product-tags" />
+                </div>
+                <div>
+                    <label for="edit-product-quantity">Quantity:</label>
+                    <input type="number" id="edit-product-quantity" />
+                </div>
+                <div>
+                    <label for="edit-product-description">Description:</label>
+                    <textarea id="edit-product-description"></textarea>
+                </div>
+                <button type="submit">Save Changes</button>
+            </form>
         </div>
 
         <!-- Inbound Section -->
