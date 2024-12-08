@@ -1,10 +1,13 @@
+/* General Body Styling */
 body {
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 20px;
     background-color: #f9f9f9;
+    color: #333;
 }
 
+/* Headings */
 h1 {
     font-size: 2rem;
     color: #333;
@@ -12,10 +15,19 @@ h1 {
     margin-bottom: 20px;
 }
 
+h3 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* Table Styling */
 table {
     margin-top: 20px;
     border-collapse: collapse;
     width: 100%;
+    background: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 table th,
@@ -31,15 +43,56 @@ table th {
     font-weight: bold;
 }
 
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Buttons */
 button {
     cursor: pointer;
     transition: background-color 0.3s;
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: none;
+    font-size: 14px;
 }
 
 button:hover {
     opacity: 0.9;
 }
 
+button.edit {
+    background-color: #28a745;
+    color: #fff;
+}
+
+button.edit:hover {
+    background-color: #218838;
+}
+
+button.delete {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+button.delete:hover {
+    background-color: #c82333;
+}
+
+button.view {
+    background-color: #007bff;
+    color: #fff;
+}
+
+button.view:hover {
+    background-color: #0056b3;
+}
+
+/* Margins */
 .mt-4 {
     margin-top: 1rem;
 }
@@ -47,7 +100,6 @@ button:hover {
 .mt-6 {
     margin-top: 1.5rem;
 }
-
 
 /* Form Styling */
 #edit-form {
@@ -88,5 +140,52 @@ button:hover {
 }
 
 #edit-form button:hover {
+    background-color: #0056b3;
+}
+
+/* Modal Styling */
+#edit-modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+#edit-modal > div {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#edit-modal h3 {
+    margin-bottom: 15px;
+}
+
+/* Pagination Buttons */
+.pagination button {
+    margin: 0 5px;
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.pagination button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
     background-color: #0056b3;
 }

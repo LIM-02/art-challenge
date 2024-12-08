@@ -222,10 +222,15 @@ function editProduct(product_id) {
             document.getElementById('edit-product-quantity').value = product.quantity;
             document.getElementById('edit-product-description').value = product.description;
 
-            // Show the form
-            document.getElementById('edit-form').style.display = 'block';
+            // Show the modal
+            document.getElementById('edit-modal').style.display = 'flex';
         })
         .catch(error => console.error('Error fetching product details:', error));
+}
+
+function closeEditModal() {
+    // Hide the modal
+    document.getElementById('edit-modal').style.display = 'none';
 }
 
 // Submit form
@@ -249,10 +254,11 @@ document.getElementById('edit-form').addEventListener('submit', function (e) {
         .then(result => {
             alert(result.message || 'Product updated successfully!');
             loadProducts(); // Reload the product list
-            document.getElementById('edit-form').style.display = 'none'; // Hide the form
+            closeEditModal(); // Hide the modal
         })
         .catch(error => console.error('Error updating product:', error));
 });
+
 
 
 
