@@ -279,5 +279,18 @@ def log_outbound():
 
 
 
+# test connection to database
+@app.route('/test-db', methods=['GET'])
+def test_db():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SHOW TABLES;')
+        tables = cursor.fetchall()
+        return jsonify({'tables': [table[0] for table in tables]})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)
