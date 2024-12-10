@@ -168,28 +168,36 @@ function updatePaginationControls(type, offset, dataLength) {
 
 // Add Product
 if (userRole === 'manager') {
-    document.getElementById("addProductForm").addEventListener("submit", function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const data = Object.fromEntries(formData);
+    document.addEventListener('DOMContentLoaded', function () {
+        const addProductForm = document.getElementById('addProductForm');
     
-        fetch("/products", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-        })
-            .then(response => response.json())
-            .then(result => {
-                if (result.message) {
-                    alert(result.message);
-                    loadProducts(); // Reload products
-                } else {
-                    alert(result.error || "Error adding product");
-                }
-                this.reset(); // Reset the form
-            })
-            .catch(error => console.error("Error:", error));
-    });
+        if (addProductForm) {
+            addProductForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData);
+    
+                fetch('/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.message) {
+                            alert(result.message);
+                            loadProducts(); // Reload products
+                        } else {
+                            alert(result.error || 'Error adding product');
+                        }
+                        this.reset(); // Reset the form
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        } else {
+            console.error('Form with id "addProductForm" not found.');
+        }
+    });    
 }
 
 // View Product Details
