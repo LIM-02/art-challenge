@@ -164,6 +164,7 @@ def edit_product(product_id):
 
 
 
+# Fetch Inbound Records
 @app.route('/inbound', methods=['GET'])
 @login_required
 def get_inbound_records():
@@ -172,7 +173,15 @@ def get_inbound_records():
     conn = get_db_connection()
     try:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute('SELECT * FROM Inbound LIMIT %s OFFSET %s', (limit, offset))
+        cursor.execute(
+            '''
+            SELECT reference, product_sku, product_id, supplier_id, quantity_received,
+                   DATE_FORMAT(received_date, "%Y-%m-%d %H:%i:%s") as received_date, location, remarks
+            FROM Inbound
+            LIMIT %s OFFSET %s
+            ''',
+            (limit, offset)
+        )
         records = cursor.fetchall()
         return jsonify(records)
     finally:
@@ -180,7 +189,7 @@ def get_inbound_records():
         conn.close()
 
 
-# Log an inbound record
+# Log an Inbound Record
 @app.route('/inbound', methods=['POST'])
 @login_required
 def log_inbound():
@@ -188,12 +197,10 @@ def log_inbound():
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        print("Inbound data received:", data)  # Debug: Log incoming data
-        
-        # Check if the product exists in the inventory
+
+        # Check if the product exists
         cursor.execute('SELECT COUNT(*) FROM Product WHERE product_id = %s', (data['product_id'],))
         exists = cursor.fetchone()[0]
-        print("Product exists in inventory:", exists)  # Debug: Log existence check
 
         if exists:
             # Update product quantity
@@ -201,26 +208,29 @@ def log_inbound():
                 'UPDATE Product SET quantity = quantity + %s WHERE product_id = %s',
                 (data['quantity_received'], data['product_id'])
             )
-            print("Product quantity updated.")  # Debug: Log update
         else:
             # Add new product if it doesn't exist
             cursor.execute(
-                'INSERT INTO Product (product_id, product_name, tags, quantity, description) VALUES (%s, %s, %s, %s, %s)',
+                '''
+                INSERT INTO Product (product_id, product_name, tags, quantity, description)
+                VALUES (%s, %s, %s, %s, %s)
+                ''',
                 (data['product_id'], data.get('product_name', ''), data.get('tags', ''), data['quantity_received'], data.get('description', ''))
             )
-            print("New product added to inventory.")  # Debug: Log new product insertion
 
-        # Add to Inbound table
+        # Insert into Inbound table
         cursor.execute(
-            'INSERT INTO Inbound (product_id, supplier_id, quantity_received, received_date) VALUES (%s, %s, %s, %s)',
-            (data['product_id'], data['supplier_id'], data['quantity_received'], data['received_date'])
+            '''
+            INSERT INTO Inbound (reference, product_sku, product_id, supplier_id, quantity_received, received_date, location, remarks)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ''',
+            (data.get('reference'), data.get('product_sku'), data['product_id'], data['supplier_id'],
+             data['quantity_received'], data['received_date'], data.get('location'), data.get('remarks'))
         )
         conn.commit()
-        print("Inbound record added.")  # Debug: Log inbound record insertion
         return jsonify({'message': 'Inbound record added and inventory updated successfully'}), 201
     except Exception as e:
         conn.rollback()
-        print("Error:", e)  # Debug: Log errors
         return jsonify({'error': str(e)}), 400
     finally:
         cursor.close()

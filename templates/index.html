@@ -121,28 +121,33 @@
             <table id="inboundTable" class="table-auto w-full border-collapse border border-gray-200 shadow-md">
                 <thead class="bg-gray-200">
                     <tr>
-                        <th class="border border-gray-300 px-4 py-2">ID</th>
+                        <th class="border border-gray-300 px-4 py-2">Reference</th>
+                        <th class="border border-gray-300 px-4 py-2">Product SKU</th>
                         <th class="border border-gray-300 px-4 py-2">Product ID</th>
                         <th class="border border-gray-300 px-4 py-2">Supplier ID</th>
                         <th class="border border-gray-300 px-4 py-2">Quantity Received</th>
                         <th class="border border-gray-300 px-4 py-2">Received Date</th>
+                        <th class="border border-gray-300 px-4 py-2">Location</th>
+                        <th class="border border-gray-300 px-4 py-2">Remarks</th>
                     </tr>
                 </thead>
                 <tbody class="text-center"></tbody>
             </table>
             <form id="inboundForm" class="grid gap-4 mt-6 p-4 bg-gray-100 border border-gray-200 rounded-md">
+                <input type="text" name="reference" placeholder="Reference" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="text" name="product_sku" placeholder="Product SKU" required class="px-4 py-2 border border-gray-300 rounded-md" />
                 <input type="number" name="product_id" placeholder="Product ID" required class="px-4 py-2 border border-gray-300 rounded-md" />
                 <input type="text" name="supplier_id" placeholder="Supplier ID" required class="px-4 py-2 border border-gray-300 rounded-md" />
                 <input type="number" name="quantity_received" placeholder="Quantity Received" required class="px-4 py-2 border border-gray-300 rounded-md" />
                 <input type="datetime-local" name="received_date" required class="px-4 py-2 border border-gray-300 rounded-md" />
-                <input type="text" name="product_name" placeholder="Product Name (only for new products)" class="px-4 py-2 border border-gray-300 rounded-md" />
-                <input type="text" name="tags" placeholder="Tags (only for new products)" class="px-4 py-2 border border-gray-300 rounded-md" />
-                <input type="text" name="description" placeholder="Description (only for new products)" class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="text" name="location" placeholder="Location" class="px-4 py-2 border border-gray-300 rounded-md" />
+                <textarea name="remarks" placeholder="Remarks" class="px-4 py-2 border border-gray-300 rounded-md"></textarea>
                 <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
                     Log Inbound
                 </button>
             </form>
         </div>
+        
 
         <!-- Outbound Section -->
         <div id="outbound-section" style="display:none;">

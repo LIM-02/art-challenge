@@ -277,40 +277,35 @@ function loadInbound(offset = 0) {
             inboundTableBody.innerHTML = ""; // Clear existing rows
 
             if (data.length === 0 && offset === 0) {
-                inboundTableBody.innerHTML = `<tr><td colspan="5">No inbound records found</td></tr>`;
+                inboundTableBody.innerHTML = `<tr><td colspan="8">No inbound records found</td></tr>`;
                 return;
             }
 
             data.forEach(record => {
                 const row = `
                     <tr>
-                        <td>${record.inbound_id}</td>
+                        <td>${record.reference}</td>
+                        <td>${record.product_sku}</td>
                         <td>${record.product_id}</td>
                         <td>${record.supplier_id}</td>
                         <td>${record.quantity_received}</td>
                         <td>${record.received_date}</td>
+                        <td>${record.location}</td>
+                        <td>${record.remarks}</td>
                     </tr>
                 `;
                 inboundTableBody.innerHTML += row;
             });
 
-            // Update Pagination Buttons
             updatePaginationControls("inbound", offset, data.length);
         })
         .catch(error => console.error("Error fetching inbound records:", error));
 }
 
-
-// Submit New Inbound Record
 document.getElementById('inboundForm').addEventListener('submit', function (e) {
     e.preventDefault();
     const formData = new FormData(this);
     const data = Object.fromEntries(formData);
-
-    // Ensure only necessary fields are sent for new products
-    if (!data.product_name) delete data.product_name;
-    if (!data.tags) delete data.tags;
-    if (!data.description) delete data.description;
 
     fetch('/inbound', {
         method: 'POST',
@@ -321,12 +316,12 @@ document.getElementById('inboundForm').addEventListener('submit', function (e) {
         .then(result => {
             if (result.message) {
                 alert(result.message);
-                loadInbound(); // Reload inbound records
-                loadProducts(); // Update inventory
+                loadInbound();
+                loadProducts();
             } else {
                 alert(result.error || 'Error logging inbound record');
             }
-            this.reset(); // Reset the form
+            this.reset();
         })
         .catch(error => alert('Error: ' + error.message));
 });
