@@ -74,12 +74,20 @@ def get_all_products():
     conn = get_db_connection()
     try:
         cursor = conn.cursor(dictionary=True)
+
+        # Get total count
+        cursor.execute('SELECT COUNT(*) AS total FROM Product')
+        total = cursor.fetchone()['total']
+
+        # Fetch paginated records
         cursor.execute('SELECT * FROM Product LIMIT %s OFFSET %s', (limit, offset))
         products = cursor.fetchall()
-        return jsonify(products)
+
+        return jsonify({'total': total, 'products': products})
     finally:
         cursor.close()
         conn.close()
+
 
 
 # Get a product by SKU
@@ -94,6 +102,8 @@ def get_product(sku):
         if product:
             return jsonify(product)
         return jsonify({'error': 'Product not found'}), 404
+    except mysql.connector.Error as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
     finally:
         cursor.close()
         conn.close()
@@ -104,6 +114,13 @@ def get_product(sku):
 @manager_required
 def add_product():
     data = request.json
+    required_fields = ['sku', 'product_name', 'category', 'description', 'quantity', 'location', 'supplier']
+
+    # Validate required fields
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return jsonify({'error': f'Missing or invalid field: {field}'}), 400
+
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
@@ -113,9 +130,12 @@ def add_product():
         )
         conn.commit()
         return jsonify({'message': 'Product added successfully'}), 201
+    except mysql.connector.Error as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
     finally:
         cursor.close()
         conn.close()
+
 
 
 # Update an existing product (Manager only)
@@ -182,19 +202,28 @@ def log_inbound():
     try:
         cursor = conn.cursor()
 
-        # Update product quantity
-        cursor.execute('UPDATE Product SET quantity = quantity + %s WHERE sku = %s', (data['quantity_received'], data['product_sku']))
+        # Check if product exists
+        cursor.execute('SELECT COUNT(*) FROM Product WHERE sku = %s', (data['product_sku'],))
+        if cursor.fetchone()[0] == 0:
+            return jsonify({'error': 'Product SKU not found'}), 400
 
-        # Insert into Inbound table
+        # Proceed with inbound record logging
+        cursor.execute(
+            'UPDATE Product SET quantity = quantity + %s WHERE sku = %s',
+            (data['quantity_received'], data['product_sku'])
+        )
         cursor.execute(
             'INSERT INTO Inbound (reference, product_sku, supplier_id, quantity_received, received_date, location, remarks) VALUES (%s, %s, %s, %s, %s, %s, %s)',
             (data['reference'], data['product_sku'], data['supplier_id'], data['quantity_received'], data['received_date'], data['location'], data['remarks'])
         )
         conn.commit()
         return jsonify({'message': 'Inbound record logged successfully'}), 201
+    except mysql.connector.Error as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
     finally:
         cursor.close()
         conn.close()
+
 
 
 # Fetch Outbound Records
