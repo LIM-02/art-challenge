@@ -46,38 +46,35 @@ function loadProducts(offset = 0) {
             const productTableBody = document.querySelector("#productTable tbody");
             productTableBody.innerHTML = ""; // Clear existing rows
 
-            if (data.length === 0 && currentOffset > 0) {
-                alert('No more records to display');
-                currentOffset -= limit; // Prevent invalid offset
+            if (data.length === 0 && offset > 0) {
+                alert("No more records to display");
                 return;
             }
 
             data.forEach(product => {
-                let actions = `
-                    <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" onclick="viewProduct(${product.product_id})">View</button>
+                const actions = `
+                    <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" onclick="viewProduct('${product.sku}')">View</button>
+                    <button class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600" onclick="editProduct('${product.sku}')">Edit</button>
+                    <button class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600" onclick="deleteProduct('${product.sku}')">Delete</button>
                 `;
-                if (userRole === 'manager') {
-                    actions += `
-                        <button class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600" onclick="editProduct(${product.product_id})">Edit</button>
-                        <button class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600" onclick="deleteProduct(${product.product_id})">Delete</button>
-                    `;
-                }
+
                 const row = `
                     <tr>
-                        <td>${product.product_id}</td>
+                        <td>${product.sku}</td>
                         <td>${product.product_name}</td>
-                        <td>${product.tags}</td>
-                        <td>${product.description}</td>
+                        <td>${product.category || "N/A"}</td>
+                        <td>${product.description || "N/A"}</td>
                         <td>${product.quantity}</td>
+                        <td>${product.location || "N/A"}</td>
+                        <td>${product.supplier || "N/A"}</td>
                         <td>${actions}</td>
                     </tr>
                 `;
                 productTableBody.innerHTML += row;
             });
 
-            // Enable/Disable Pagination Buttons
-            document.getElementById('prev-button').disabled = offset === 0;
-            document.getElementById('next-button').disabled = data.length < limit;
+            document.getElementById("prev-button").disabled = offset === 0;
+            document.getElementById("next-button").disabled = data.length < limit;
         })
         .catch(error => console.error("Error fetching products:", error));
 }
@@ -171,21 +168,27 @@ function updatePaginationControls(type, offset, dataLength) {
 
 // Add Product
 if (userRole === 'manager') {
-    document.getElementById('addProductForm').addEventListener('submit', function (e) {
+    document.getElementById("addProductForm").addEventListener("submit", function (e) {
         e.preventDefault();
         const formData = new FormData(this);
         const data = Object.fromEntries(formData);
-        fetch('/products', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+    
+        fetch("/products", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
         })
             .then(response => response.json())
             .then(result => {
-                alert(result.message);
-                loadProducts();
-                this.reset();
-            });
+                if (result.message) {
+                    alert(result.message);
+                    loadProducts(); // Reload products
+                } else {
+                    alert(result.error || "Error adding product");
+                }
+                this.reset(); // Reset the form
+            })
+            .catch(error => console.error("Error:", error));
     });
 }
 
