@@ -7,36 +7,43 @@ const inboundSection = document.getElementById('inbound-section');
 const outboundSection = document.getElementById('outbound-section');
 const addProductSection = document.getElementById('add-product-section');
 
+// Global variables for pagination
+let inventoryOffset = 0;
+let inboundOffset = 0;
+let outboundOffset = 0;
+const limit = 10;
+
+// Initialize the UI based on user role
+function updateUIForRole() {
+    if (userRole === 'manager') {
+        if (addProductSection) addProductSection.style.display = 'block';
+    } else {
+        if (addProductSection) addProductSection.style.display = 'none';
+    }
+}
+updateUIForRole();
+
 // Event Listeners for Navigation Buttons
-document.getElementById('inventory-button').addEventListener('click', () => {
+document.getElementById('inventory-button')?.addEventListener('click', () => {
     inventorySection.style.display = 'block';
     inboundSection.style.display = 'none';
     outboundSection.style.display = 'none';
     loadProducts();
 });
 
-document.getElementById('inbound-button').addEventListener('click', () => {
+document.getElementById('inbound-button')?.addEventListener('click', () => {
     inventorySection.style.display = 'none';
     outboundSection.style.display = 'none';
     inboundSection.style.display = 'block';
-
-    // Show inbound pagination controls
-    document.getElementById('pagination-controls-inbound').classList.remove('hidden');
-
-    // Load Inbound Records
     loadInbound();
 });
 
-document.getElementById('outbound-button').addEventListener('click', () => {
+document.getElementById('outbound-button')?.addEventListener('click', () => {
     inventorySection.style.display = 'none';
     inboundSection.style.display = 'none';
     outboundSection.style.display = 'block';
-
-    document.getElementById('pagination-controls-outbound').classList.remove('hidden');
-
     loadOutbound();
 });
-
 
 // Fetch and Display Products with Pagination
 function loadProducts(offset = 0) {
@@ -54,8 +61,10 @@ function loadProducts(offset = 0) {
             data.forEach(product => {
                 const actions = `
                     <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" onclick="viewProduct('${product.sku}')">View</button>
+                    ${userRole === 'manager' ? `
                     <button class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600" onclick="editProduct('${product.sku}')">Edit</button>
                     <button class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600" onclick="deleteProduct('${product.sku}')">Delete</button>
+                    ` : ''}
                 `;
 
                 const row = `
@@ -79,104 +88,16 @@ function loadProducts(offset = 0) {
         .catch(error => console.error("Error fetching products:", error));
 }
 
-
-// Global variables for pagination
-let inventoryOffset = 0;
-let inboundOffset = 0;
-let outboundOffset = 0;
-const limit = 10;
-
-// Inventory Pagination
-document.getElementById('prev-button').addEventListener('click', () => {
-    if (inventoryOffset > 0) {
-        inventoryOffset -= limit;
-        loadProducts(inventoryOffset);
-    }
-});
-
-document.getElementById('next-button').addEventListener('click', () => {
-    inventoryOffset += limit;
-    loadProducts(inventoryOffset);
-});
-
-// Inbound Pagination
-document.getElementById('prev-inbound-button').addEventListener('click', () => {
-    if (inboundOffset > 0) {
-        inboundOffset -= limit;
-        loadInbound(inboundOffset);
-    }
-});
-
-document.getElementById('next-inbound-button').addEventListener('click', () => {
-    inboundOffset += limit;
-    loadInbound(inboundOffset);
-});
-
-// Outbound Pagination
-document.getElementById('prev-outbound-button').addEventListener('click', () => {
-    if (outboundOffset > 0) {
-        outboundOffset -= limit;
-        loadOutbound(outboundOffset);
-    }
-});
-
-document.getElementById('next-outbound-button').addEventListener('click', () => {
-    outboundOffset += limit;
-    loadOutbound(outboundOffset);
-});
-
-// Enable/Disable Pagination Buttons Dynamically
-function updatePaginationControls(type, offset, dataLength) {
-    if (type === "inbound") {
-        const prevButton = document.getElementById("prev-inbound-button");
-        const nextButton = document.getElementById("next-inbound-button");
-
-        // Disable Previous button if at the first page
-        if (offset === 0) {
-            prevButton.disabled = true;
-        } else {
-            prevButton.disabled = false;
-        }
-
-        // Disable Next button if fewer records than the limit are returned
-        if (dataLength < limit) {
-            nextButton.disabled = true;
-        } else {
-            nextButton.disabled = false;
-        }
-    }
-
-    // Similar logic for outbound (if needed)
-    if (type === "outbound") {
-        const prevButton = document.getElementById("prev-outbound-button");
-        const nextButton = document.getElementById("next-outbound-button");
-
-        if (offset === 0) {
-            prevButton.disabled = true;
-        } else {
-            prevButton.disabled = false;
-        }
-
-        if (dataLength < limit) {
-            nextButton.disabled = true;
-        } else {
-            nextButton.disabled = false;
-        }
-    }
-}
-
-
 // Add Product
 if (userRole === 'manager') {
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', () => {
         const addProductForm = document.getElementById('addProductForm');
-    
         if (addProductForm) {
             addProductForm.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const formData = new FormData(this);
                 const data = Object.fromEntries(formData);
-    
+
                 fetch('/products', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -184,99 +105,76 @@ if (userRole === 'manager') {
                 })
                     .then(response => response.json())
                     .then(result => {
-                        if (result.message) {
-                            alert(result.message);
-                            loadProducts(); // Reload products
-                        } else {
-                            alert(result.error || 'Error adding product');
-                        }
+                        alert(result.message || 'Product added successfully');
+                        loadProducts();
                         this.reset(); // Reset the form
                     })
-                    .catch(error => console.error('Error:', error));
+                    .catch(error => console.error('Error adding product:', error));
             });
-        } else {
-            console.error('Form with id "addProductForm" not found.');
         }
-    });    
+    });
 }
 
-// View Product Details
-function viewProduct(product_id) {
-    fetch(`/products/${product_id}`)
+// View Product
+function viewProduct(sku) {
+    fetch(`/products/${sku}`)
         .then(response => response.json())
         .then(product => {
-            alert(`Product Details:\n\nID: ${product.product_id}\nName: ${product.product_name}\nTags: ${product.tags}\nDescription: ${product.description}\nQuantity: ${product.quantity}`);
+            alert(`Product Details:\nSKU: ${product.sku}\nName: ${product.product_name}\nCategory: ${product.category}\nDescription: ${product.description}\nQuantity: ${product.quantity}`);
         });
 }
 
-// Delete Product
-function deleteProduct(product_id) {
-    fetch(`/products/${product_id}`, {
-        method: 'DELETE'
-    })
-        .then(response => response.json())
-        .then(result => {
-            alert(result.message);
-            loadProducts();
-        });
-}
-
-function editProduct(product_id) {
-    // Fetch product details from API
-    fetch(`/products/${product_id}`)
+// Edit Product
+function editProduct(sku) {
+    fetch(`/products/${sku}`)
         .then(response => response.json())
         .then(product => {
-            // Populate form fields
-            document.getElementById('edit-product-id').value = product.product_id;
+            document.getElementById('edit-product-id').value = product.sku;
             document.getElementById('edit-product-name').value = product.product_name;
-            document.getElementById('edit-product-tags').value = product.tags;
             document.getElementById('edit-product-quantity').value = product.quantity;
             document.getElementById('edit-product-description').value = product.description;
-
-            // Show the modal
             document.getElementById('edit-modal').style.display = 'flex';
-        })
-        .catch(error => console.error('Error fetching product details:', error));
+        });
 }
 
-function closeEditModal() {
-    // Hide the modal
-    document.getElementById('edit-modal').style.display = 'none';
-}
-
-// Submit form
-document.getElementById('edit-form').addEventListener('submit', function (e) {
+document.getElementById('edit-form')?.addEventListener('submit', function (e) {
     e.preventDefault();
 
     const updatedProduct = {
-        product_id: document.getElementById('edit-product-id').value,
+        sku: document.getElementById('edit-product-id').value,
         product_name: document.getElementById('edit-product-name').value,
-        tags: document.getElementById('edit-product-tags').value,
         quantity: document.getElementById('edit-product-quantity').value,
         description: document.getElementById('edit-product-description').value,
     };
 
-    fetch(`/products/${updatedProduct.product_id}`, {
+    fetch(`/products/${updatedProduct.sku}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedProduct),
     })
         .then(response => response.json())
         .then(result => {
-            alert(result.message || 'Product updated successfully!');
-            loadProducts(); // Reload the product list
-            closeEditModal(); // Hide the modal
+            alert(result.message || 'Product updated successfully');
+            loadProducts();
+            document.getElementById('edit-modal').style.display = 'none';
         })
         .catch(error => console.error('Error updating product:', error));
 });
 
+// Close Edit Modal
+function closeEditModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+}
 
-
-
-// Initial Load
-loadProducts();
-if (userRole === 'manager') {
-    addProductSection.style.display = 'block';
+// Delete Product
+function deleteProduct(sku) {
+    fetch(`/products/${sku}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(result => {
+            alert(result.message || 'Product deleted successfully');
+            loadProducts();
+        })
+        .catch(error => console.error('Error deleting product:', error));
 }
 
 // Fetch and Display Inbound Records
@@ -285,9 +183,9 @@ function loadInbound(offset = 0) {
         .then(response => response.json())
         .then(data => {
             const inboundTableBody = document.querySelector("#inboundTable tbody");
-            inboundTableBody.innerHTML = ""; // Clear existing rows
+            inboundTableBody.innerHTML = "";
 
-            if (data.length === 0 && offset === 0) {
+            if (data.length === 0) {
                 inboundTableBody.innerHTML = `<tr><td colspan="8">No inbound records found</td></tr>`;
                 return;
             }
@@ -297,7 +195,6 @@ function loadInbound(offset = 0) {
                     <tr>
                         <td>${record.reference}</td>
                         <td>${record.product_sku}</td>
-                        <td>${record.product_id}</td>
                         <td>${record.supplier_id}</td>
                         <td>${record.quantity_received}</td>
                         <td>${record.received_date}</td>
@@ -307,45 +204,19 @@ function loadInbound(offset = 0) {
                 `;
                 inboundTableBody.innerHTML += row;
             });
-
-            updatePaginationControls("inbound", offset, data.length);
         })
-        .catch(error => console.error("Error fetching inbound records:", error));
+        .catch(error => console.error('Error fetching inbound records:', error));
 }
 
-document.getElementById('inboundForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData);
-
-    fetch('/inbound', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-        .then(response => response.json())
-        .then(result => {
-            if (result.message) {
-                alert(result.message);
-                loadInbound();
-                loadProducts();
-            } else {
-                alert(result.error || 'Error logging inbound record');
-            }
-            this.reset();
-        })
-        .catch(error => alert('Error: ' + error.message));
-});
-
-
+// Fetch and Display Outbound Records
 function loadOutbound(offset = 0) {
     fetch(`/outbound?limit=${limit}&offset=${offset}`)
         .then(response => response.json())
         .then(data => {
             const outboundTableBody = document.querySelector("#outboundTable tbody");
-            outboundTableBody.innerHTML = ""; // Clear existing rows
+            outboundTableBody.innerHTML = "";
 
-            if (data.length === 0 && offset === 0) {
+            if (data.length === 0) {
                 outboundTableBody.innerHTML = `<tr><td colspan="8">No outbound records found</td></tr>`;
                 return;
             }
@@ -355,7 +226,6 @@ function loadOutbound(offset = 0) {
                     <tr>
                         <td>${record.reference}</td>
                         <td>${record.product_sku}</td>
-                        <td>${record.product_id}</td>
                         <td>${record.customer_id}</td>
                         <td>${record.quantity_sent}</td>
                         <td>${record.sent_date}</td>
@@ -365,35 +235,9 @@ function loadOutbound(offset = 0) {
                 `;
                 outboundTableBody.innerHTML += row;
             });
-
-            updatePaginationControls("outbound", offset, data.length);
         })
-        .catch(error => console.error("Error fetching outbound records:", error));
+        .catch(error => console.error('Error fetching outbound records:', error));
 }
 
-document.getElementById('outbound-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData);
-
-    fetch('/outbound', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-        .then(response => response.json())
-        .then(result => {
-            if (result.message) {
-                alert(result.message);
-                loadOutbound();
-                loadProducts(); // Update inventory
-            } else {
-                alert(result.error || 'Error logging outbound record');
-            }
-            this.reset();
-        })
-        .catch(error => alert('Error: ' + error.message));
-});
-
-
-
+// Initial Load
+loadProducts();
