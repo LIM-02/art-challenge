@@ -74,16 +74,9 @@ def get_all_products():
     conn = get_db_connection()
     try:
         cursor = conn.cursor(dictionary=True)
-
-        # Get total count
-        cursor.execute('SELECT COUNT(*) AS total FROM Product')
-        total = cursor.fetchone()['total']
-
-        # Fetch paginated records
         cursor.execute('SELECT * FROM Product LIMIT %s OFFSET %s', (limit, offset))
         products = cursor.fetchall()
-
-        return jsonify({'total': total, 'products': products})
+        return jsonify(products)
     finally:
         cursor.close()
         conn.close()
