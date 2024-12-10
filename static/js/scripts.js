@@ -218,6 +218,31 @@ function loadInbound(offset = 0) {
         .catch(error => console.error('Error fetching inbound records:', error));
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const inboundForm = document.getElementById('inboundForm');
+    if (inboundForm) {
+        inboundForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+
+            fetch('/inbound', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json())
+                .then(result => {
+                    alert(result.message || 'Inbound record logged successfully');
+                    loadInbound(); // Reload inbound records
+                    this.reset(); // Reset the form
+                })
+                .catch(error => console.error('Error logging inbound record:', error));
+        });
+    }
+});
+
+
 // Fetch and Display Outbound Records
 function loadOutbound(offset = 0) {
     fetch(`/outbound?limit=${limit}&offset=${offset}`)
@@ -248,6 +273,31 @@ function loadOutbound(offset = 0) {
         })
         .catch(error => console.error('Error fetching outbound records:', error));
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const outboundForm = document.getElementById('outboundForm');
+    if (outboundForm) {
+        outboundForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+
+            fetch('/outbound', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json())
+                .then(result => {
+                    alert(result.message || 'Outbound record logged successfully');
+                    loadOutbound(); // Reload outbound records
+                    this.reset(); // Reset the form
+                })
+                .catch(error => console.error('Error logging outbound record:', error));
+        });
+    }
+});
+
 
 // Initial Load
 loadProducts();
