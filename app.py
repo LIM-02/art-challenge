@@ -173,17 +173,9 @@ def get_inbound_records():
     conn = get_db_connection()
     try:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            '''
-            SELECT reference, product_sku, product_id, supplier_id, quantity_received,
-                   DATE_FORMAT(received_date, "%Y-%m-%d %H:%i:%s") as received_date, location, remarks
-            FROM Inbound
-            LIMIT %s OFFSET %s
-            ''',
-            (limit, offset)
-        )
+        cursor.execute('SELECT * FROM Inbound LIMIT %s OFFSET %s', (limit, offset))
         records = cursor.fetchall()
-        return jsonify(records)
+        return jsonify(records)  # Include all fields
     finally:
         cursor.close()
         conn.close()
@@ -246,17 +238,9 @@ def get_outbound_records():
     conn = get_db_connection()
     try:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            '''
-            SELECT reference, product_sku, product_id, customer_id, quantity_sent,
-                   DATE_FORMAT(sent_date, "%Y-%m-%d %H:%i:%s") as sent_date, destination, remarks
-            FROM Outbound
-            LIMIT %s OFFSET %s
-            ''',
-            (limit, offset)
-        )
+        cursor.execute('SELECT * FROM Outbound LIMIT %s OFFSET %s', (limit, offset))
         records = cursor.fetchall()
-        return jsonify(records)
+        return jsonify(records)  # Include all fields
     finally:
         cursor.close()
         conn.close()
