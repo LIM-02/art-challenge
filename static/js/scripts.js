@@ -327,7 +327,6 @@ document.getElementById('inboundForm').addEventListener('submit', function (e) {
 });
 
 
-// Fetch and Display Outbound Records
 function loadOutbound(offset = 0) {
     fetch(`/outbound?limit=${limit}&offset=${offset}`)
         .then(response => response.json())
@@ -336,37 +335,35 @@ function loadOutbound(offset = 0) {
             outboundTableBody.innerHTML = ""; // Clear existing rows
 
             if (data.length === 0 && offset === 0) {
-                outboundTableBody.innerHTML = `<tr><td colspan="5">No outbound records found</td></tr>`;
+                outboundTableBody.innerHTML = `<tr><td colspan="8">No outbound records found</td></tr>`;
                 return;
             }
 
             data.forEach(record => {
                 const row = `
                     <tr>
-                        <td>${record.outbound_id}</td>
+                        <td>${record.reference}</td>
+                        <td>${record.product_sku}</td>
                         <td>${record.product_id}</td>
                         <td>${record.customer_id}</td>
                         <td>${record.quantity_sent}</td>
                         <td>${record.sent_date}</td>
+                        <td>${record.destination}</td>
+                        <td>${record.remarks}</td>
                     </tr>
                 `;
                 outboundTableBody.innerHTML += row;
             });
 
-            // Update Pagination Buttons
             updatePaginationControls("outbound", offset, data.length);
         })
         .catch(error => console.error("Error fetching outbound records:", error));
 }
 
-
-
-// Submit New Outbound Record
 document.getElementById('outbound-form').addEventListener('submit', function (e) {
     e.preventDefault();
     const formData = new FormData(this);
     const data = Object.fromEntries(formData);
-    console.log('Outbound Payload:', data); // Debugging payload
 
     fetch('/outbound', {
         method: 'POST',
@@ -382,7 +379,7 @@ document.getElementById('outbound-form').addEventListener('submit', function (e)
             } else {
                 alert(result.error || 'Error logging outbound record');
             }
-            this.reset(); // Reset the form
+            this.reset();
         })
         .catch(error => alert('Error: ' + error.message));
 });

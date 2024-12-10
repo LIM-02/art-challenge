@@ -237,6 +237,7 @@ def log_inbound():
         conn.close()
 
 
+# Fetch Outbound Records
 @app.route('/outbound', methods=['GET'])
 @login_required
 def get_outbound_records():
@@ -245,63 +246,68 @@ def get_outbound_records():
     conn = get_db_connection()
     try:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute('SELECT * FROM Outbound LIMIT %s OFFSET %s', (limit, offset))
+        cursor.execute(
+            '''
+            SELECT reference, product_sku, product_id, customer_id, quantity_sent,
+                   DATE_FORMAT(sent_date, "%Y-%m-%d %H:%i:%s") as sent_date, destination, remarks
+            FROM Outbound
+            LIMIT %s OFFSET %s
+            ''',
+            (limit, offset)
+        )
         records = cursor.fetchall()
         return jsonify(records)
     finally:
         cursor.close()
         conn.close()
 
-# Log an outbound record
+# Log an Outbound Record
 @app.route('/outbound', methods=['POST'])
 @login_required
 def log_outbound():
-    data = request.json  # Get JSON data from the client
+    data = request.json
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
 
-        # Step 1: Check if the product exists
+        # Check if the product exists and its quantity
         cursor.execute('SELECT quantity FROM Product WHERE product_id = %s', (data['product_id'],))
         result = cursor.fetchone()
         if not result:
             return jsonify({'error': 'Product not found'}), 404
 
-        # Step 2: Ensure quantity values are integers for proper comparison
-        current_quantity = int(result[0])  # Convert to integer
-        quantity_sent = int(data['quantity_sent'])  # Convert to integer
+        current_quantity = int(result[0])  # Ensure the quantity is an integer
+        quantity_sent = int(data['quantity_sent'])
 
-        # Step 3: Check if there is sufficient quantity
+        # Validate if enough quantity is available
         if current_quantity < quantity_sent:
             return jsonify({'error': 'Insufficient quantity in inventory'}), 400
 
-        # Step 4: Reduce the quantity in the inventory
-        new_quantity = current_quantity - quantity_sent
+        # Reduce the quantity in the inventory
         cursor.execute(
-            'UPDATE Product SET quantity = %s WHERE product_id = %s',
-            (new_quantity, data['product_id'])
+            'UPDATE Product SET quantity = quantity - %s WHERE product_id = %s',
+            (quantity_sent, data['product_id'])
         )
 
-        # Step 5: (Optional) Remove the product if the quantity reaches zero
-        if new_quantity == 0:
-            cursor.execute('DELETE FROM Product WHERE product_id = %s', (data['product_id'],))
-
-        # Step 6: Record the outbound operation in the Outbound table
+        # Add a record to the Outbound table
         cursor.execute(
-            'INSERT INTO Outbound (product_id, customer_id, quantity_sent, sent_date) VALUES (%s, %s, %s, %s)',
-            (data['product_id'], data['customer_id'], quantity_sent, data['sent_date'])
+            '''
+            INSERT INTO Outbound (reference, product_sku, product_id, customer_id, quantity_sent, sent_date, destination, remarks)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ''',
+            (data.get('reference'), data.get('product_sku'), data['product_id'], data['customer_id'],
+             quantity_sent, data['sent_date'], data.get('destination'), data.get('remarks'))
         )
 
-        # Commit the transaction
         conn.commit()
-
         return jsonify({'message': 'Outbound record logged successfully'}), 201
     except Exception as e:
-        conn.rollback()  # Roll back in case of error
+        conn.rollback()
         return jsonify({'error': str(e)}), 400
     finally:
         cursor.close()
         conn.close()
+
 
 
 

@@ -150,7 +150,7 @@
         
 
         <!-- Outbound Section -->
-        <div id="outbound-section" style="display:none;">
+        <div id="outbound-section" style="display: none;">
             <h2 class="text-xl font-bold mb-4">Outbound Management</h2>
             <div id="pagination-controls-outbound" class="flex justify-end space-x-4 mt-4 hidden">
                 <button id="prev-outbound-button" class="px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400" disabled>
@@ -163,25 +163,32 @@
             <table id="outboundTable" class="table-auto w-full border-collapse border border-gray-200 shadow-md">
                 <thead class="bg-gray-200">
                     <tr>
-                        <th class="border border-gray-300 px-4 py-2">ID</th>
+                        <th class="border border-gray-300 px-4 py-2">Reference</th>
+                        <th class="border border-gray-300 px-4 py-2">Product SKU</th>
                         <th class="border border-gray-300 px-4 py-2">Product ID</th>
                         <th class="border border-gray-300 px-4 py-2">Customer ID</th>
                         <th class="border border-gray-300 px-4 py-2">Quantity Sent</th>
                         <th class="border border-gray-300 px-4 py-2">Sent Date</th>
+                        <th class="border border-gray-300 px-4 py-2">Destination</th>
+                        <th class="border border-gray-300 px-4 py-2">Remarks</th>
                     </tr>
                 </thead>
                 <tbody class="text-center"></tbody>
             </table>
             <form id="outbound-form" class="grid gap-4 mt-6 p-4 bg-gray-100 border border-gray-200 rounded-md">
+                <input type="text" name="reference" placeholder="Reference" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="text" name="product_sku" placeholder="Product SKU" required class="px-4 py-2 border border-gray-300 rounded-md" />
                 <input type="number" name="product_id" placeholder="Product ID" required class="px-4 py-2 border border-gray-300 rounded-md" />
                 <input type="number" name="customer_id" placeholder="Customer ID" required class="px-4 py-2 border border-gray-300 rounded-md" />
                 <input type="number" name="quantity_sent" placeholder="Quantity Sent" required class="px-4 py-2 border border-gray-300 rounded-md" />
                 <input type="datetime-local" name="sent_date" required class="px-4 py-2 border border-gray-300 rounded-md" />
+                <input type="text" name="destination" placeholder="Destination" class="px-4 py-2 border border-gray-300 rounded-md" />
+                <textarea name="remarks" placeholder="Remarks" class="px-4 py-2 border border-gray-300 rounded-md"></textarea>
                 <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
                     Log Outbound
                 </button>
             </form>
-        </div>
+        </div>        
     </main>
 
     <!-- Link to external JS -->
