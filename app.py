@@ -7,10 +7,12 @@ from functools import wraps
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Replace with your actual secret key
 
+
 # Database connection function
 def get_db_connection():
     conn = mysql.connector.connect(**DATABASE)
     return conn
+
 
 # Authentication decorators
 def login_required(f):
@@ -21,6 +23,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 def manager_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -28,6 +31,7 @@ def manager_required(f):
             return jsonify({'error': 'Manager access required'}), 403
         return f(*args, **kwargs)
     return decorated_function
+
 
 # Login route
 @app.route('/login', methods=['GET', 'POST'])
@@ -46,17 +50,20 @@ def login():
             return render_template('login.html', error=error)
     return render_template('login.html')
 
+
 # Logout route
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
+
 # Home route
 @app.route('/')
 @login_required
 def index():
     return render_template('index.html', username=session.get('username'), role=session.get('role'))
+
 
 # Get all products
 @app.route('/products', methods=['GET'])
@@ -75,16 +82,14 @@ def get_all_products():
         conn.close()
 
 
-
-
-# Get a product by ID
-@app.route('/products/<int:product_id>', methods=['GET'])
+# Get a product by SKU
+@app.route('/products/<string:sku>', methods=['GET'])
 @login_required
-def get_product(product_id):
+def get_product(sku):
     conn = get_db_connection()
     try:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute('SELECT * FROM Product WHERE product_id = %s', (product_id,))
+        cursor.execute('SELECT * FROM Product WHERE sku = %s', (sku,))
         product = cursor.fetchone()
         if product:
             return jsonify(product)
@@ -92,6 +97,7 @@ def get_product(product_id):
     finally:
         cursor.close()
         conn.close()
+
 
 # Add a new product (Manager only)
 @app.route('/products', methods=['POST'])
@@ -102,8 +108,8 @@ def add_product():
     try:
         cursor = conn.cursor()
         cursor.execute(
-            'INSERT INTO Product (product_name, tags, description, quantity) VALUES (%s, %s, %s, %s)',
-            (data['product_name'], data['tags'], data['description'], data['quantity'])
+            'INSERT INTO Product (sku, product_name, category, description, quantity, location, supplier) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+            (data['sku'], data['product_name'], data['category'], data['description'], data['quantity'], data['location'], data['supplier'])
         )
         conn.commit()
         return jsonify({'message': 'Product added successfully'}), 201
@@ -111,17 +117,18 @@ def add_product():
         cursor.close()
         conn.close()
 
+
 # Update an existing product (Manager only)
-@app.route('/products/<int:product_id>', methods=['PUT'])
+@app.route('/products/<string:sku>', methods=['PUT'])
 @manager_required
-def update_product(product_id):
+def update_product(sku):
     data = request.json
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         cursor.execute(
-            'UPDATE Product SET product_name = %s, tags = %s, description = %s, quantity = %s WHERE product_id = %s',
-            (data['product_name'], data['tags'], data['description'], data['quantity'], product_id)
+            'UPDATE Product SET product_name = %s, category = %s, description = %s, quantity = %s, location = %s, supplier = %s WHERE sku = %s',
+            (data['product_name'], data['category'], data['description'], data['quantity'], data['location'], data['supplier'], sku)
         )
         conn.commit()
         if cursor.rowcount > 0:
@@ -131,14 +138,15 @@ def update_product(product_id):
         cursor.close()
         conn.close()
 
+
 # Delete a product (Manager only)
-@app.route('/products/<int:product_id>', methods=['DELETE'])
+@app.route('/products/<string:sku>', methods=['DELETE'])
 @manager_required
-def delete_product(product_id):
+def delete_product(sku):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute('DELETE FROM Product WHERE product_id = %s', (product_id,))
+        cursor.execute('DELETE FROM Product WHERE sku = %s', (sku,))
         conn.commit()
         if cursor.rowcount > 0:
             return jsonify({'message': 'Product deleted successfully'}), 200
@@ -146,22 +154,6 @@ def delete_product(product_id):
     finally:
         cursor.close()
         conn.close()
-
-# edit a product (Manager only)
-@app.route('/products/<int:product_id>', methods=['GET', 'PUT'])
-@manager_required
-def edit_product(product_id):
-    if request.method == 'GET':
-        cursor = get_db_connection().cursor(dictionary=True)
-        cursor.execute('SELECT * FROM Product WHERE product_id = %s', (product_id,))
-        product = cursor.fetchone()
-        if product:
-            return jsonify(product), 200
-        return jsonify({"error": "Product not found"}), 404
-    elif request.method == 'PUT':
-        # Handle the update logic here
-        pass
-
 
 
 # Fetch Inbound Records
@@ -175,7 +167,7 @@ def get_inbound_records():
         cursor = conn.cursor(dictionary=True)
         cursor.execute('SELECT * FROM Inbound LIMIT %s OFFSET %s', (limit, offset))
         records = cursor.fetchall()
-        return jsonify(records)  # Include all fields
+        return jsonify(records)
     finally:
         cursor.close()
         conn.close()
@@ -190,40 +182,16 @@ def log_inbound():
     try:
         cursor = conn.cursor()
 
-        # Check if the product exists
-        cursor.execute('SELECT COUNT(*) FROM Product WHERE product_id = %s', (data['product_id'],))
-        exists = cursor.fetchone()[0]
-
-        if exists:
-            # Update product quantity
-            cursor.execute(
-                'UPDATE Product SET quantity = quantity + %s WHERE product_id = %s',
-                (data['quantity_received'], data['product_id'])
-            )
-        else:
-            # Add new product if it doesn't exist
-            cursor.execute(
-                '''
-                INSERT INTO Product (product_id, product_name, tags, quantity, description)
-                VALUES (%s, %s, %s, %s, %s)
-                ''',
-                (data['product_id'], data.get('product_name', ''), data.get('tags', ''), data['quantity_received'], data.get('description', ''))
-            )
+        # Update product quantity
+        cursor.execute('UPDATE Product SET quantity = quantity + %s WHERE sku = %s', (data['quantity_received'], data['product_sku']))
 
         # Insert into Inbound table
         cursor.execute(
-            '''
-            INSERT INTO Inbound (reference, product_sku, product_id, supplier_id, quantity_received, received_date, location, remarks)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ''',
-            (data.get('reference'), data.get('product_sku'), data['product_id'], data['supplier_id'],
-             data['quantity_received'], data['received_date'], data.get('location'), data.get('remarks'))
+            'INSERT INTO Inbound (reference, product_sku, supplier_id, quantity_received, received_date, location, remarks) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+            (data['reference'], data['product_sku'], data['supplier_id'], data['quantity_received'], data['received_date'], data['location'], data['remarks'])
         )
         conn.commit()
-        return jsonify({'message': 'Inbound record added and inventory updated successfully'}), 201
-    except Exception as e:
-        conn.rollback()
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'message': 'Inbound record logged successfully'}), 201
     finally:
         cursor.close()
         conn.close()
@@ -240,10 +208,11 @@ def get_outbound_records():
         cursor = conn.cursor(dictionary=True)
         cursor.execute('SELECT * FROM Outbound LIMIT %s OFFSET %s', (limit, offset))
         records = cursor.fetchall()
-        return jsonify(records)  # Include all fields
+        return jsonify(records)
     finally:
         cursor.close()
         conn.close()
+
 
 # Log an Outbound Record
 @app.route('/outbound', methods=['POST'])
@@ -254,48 +223,28 @@ def log_outbound():
     try:
         cursor = conn.cursor()
 
-        # Check if the product exists and its quantity
-        cursor.execute('SELECT quantity FROM Product WHERE product_id = %s', (data['product_id'],))
+        # Check product quantity
+        cursor.execute('SELECT quantity FROM Product WHERE sku = %s', (data['product_sku'],))
         result = cursor.fetchone()
-        if not result:
-            return jsonify({'error': 'Product not found'}), 404
+        if not result or result[0] < data['quantity_sent']:
+            return jsonify({'error': 'Insufficient quantity or product not found'}), 400
 
-        current_quantity = int(result[0])  # Ensure the quantity is an integer
-        quantity_sent = int(data['quantity_sent'])
+        # Reduce product quantity
+        cursor.execute('UPDATE Product SET quantity = quantity - %s WHERE sku = %s', (data['quantity_sent'], data['product_sku']))
 
-        # Validate if enough quantity is available
-        if current_quantity < quantity_sent:
-            return jsonify({'error': 'Insufficient quantity in inventory'}), 400
-
-        # Reduce the quantity in the inventory
+        # Insert into Outbound table
         cursor.execute(
-            'UPDATE Product SET quantity = quantity - %s WHERE product_id = %s',
-            (quantity_sent, data['product_id'])
+            'INSERT INTO Outbound (reference, product_sku, customer_id, quantity_sent, sent_date, destination, remarks) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+            (data['reference'], data['product_sku'], data['customer_id'], data['quantity_sent'], data['sent_date'], data['destination'], data['remarks'])
         )
-
-        # Add a record to the Outbound table
-        cursor.execute(
-            '''
-            INSERT INTO Outbound (reference, product_sku, product_id, customer_id, quantity_sent, sent_date, destination, remarks)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ''',
-            (data.get('reference'), data.get('product_sku'), data['product_id'], data['customer_id'],
-             quantity_sent, data['sent_date'], data.get('destination'), data.get('remarks'))
-        )
-
         conn.commit()
         return jsonify({'message': 'Outbound record logged successfully'}), 201
-    except Exception as e:
-        conn.rollback()
-        return jsonify({'error': str(e)}), 400
     finally:
         cursor.close()
         conn.close()
 
 
-
-
-# test connection to database
+# Test database connection
 @app.route('/test-db', methods=['GET'])
 def test_db():
     try:
