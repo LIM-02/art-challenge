@@ -129,15 +129,29 @@ function editProduct(sku) {
     fetch(`/products/${sku}`)
         .then(response => response.json())
         .then(product => {
+            if (product.error) {
+                alert(product.error);
+                return;
+            }
+            // Populate modal form with product details
             document.getElementById('edit-product-id').value = product.sku;
             document.getElementById('edit-product-name').value = product.product_name;
             document.getElementById('edit-product-quantity').value = product.quantity;
             document.getElementById('edit-product-description').value = product.description;
+
+            // Show the modal
             document.getElementById('edit-modal').style.display = 'flex';
-        });
+        })
+        .catch(error => console.error('Error fetching product details:', error));
 }
 
-document.getElementById('edit-form')?.addEventListener('submit', function (e) {
+// Function to close the modal
+function closeEditModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+}
+
+// Function to handle form submission
+document.getElementById('edit-form').addEventListener('submit', function (e) {
     e.preventDefault();
 
     const updatedProduct = {
@@ -154,17 +168,13 @@ document.getElementById('edit-form')?.addEventListener('submit', function (e) {
     })
         .then(response => response.json())
         .then(result => {
-            alert(result.message || 'Product updated successfully');
-            loadProducts();
-            document.getElementById('edit-modal').style.display = 'none';
+            alert(result.message || 'Product updated successfully!');
+            closeEditModal(); // Hide the modal
+            loadProducts(); // Reload the product list
         })
         .catch(error => console.error('Error updating product:', error));
 });
 
-// Close Edit Modal
-function closeEditModal() {
-    document.getElementById('edit-modal').style.display = 'none';
-}
 
 // Delete Product
 function deleteProduct(sku) {
